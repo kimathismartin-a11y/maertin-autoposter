@@ -1,0 +1,72 @@
+name: Wealth Insights Global Autoposter
+
+on:
+  schedule:
+    # 10 posts per day — every 2h24m starting 06:00 UTC (09:00 EAT)
+    - cron: "0 6 * * *"    # Run 0  — post index 0
+    - cron: "24 8 * * *"   # Run 1  — post index 1
+    - cron: "48 10 * * *"  # Run 2  — post index 2
+    - cron: "12 13 * * *"  # Run 3  — post index 3
+    - cron: "36 15 * * *"  # Run 4  — post index 4
+    - cron: "0 18 * * *"   # Run 5  — post index 5
+    - cron: "24 20 * * *"  # Run 6  — post index 6
+    - cron: "48 22 * * *"  # Run 7  — post index 7
+    - cron: "12 1 * * *"   # Run 8  — post index 8
+    - cron: "36 3 * * *"   # Run 9  — post index 9
+  workflow_dispatch:
+    inputs:
+      post_index:
+        description: "Post index to use (0–29)"
+        required: false
+        default: "0"
+
+jobs:
+  autopost:
+    runs-on: ubuntu-latest
+    env:
+      FB_ACCESS_TOKEN: ${{ secrets.FB_ACCESS_TOKEN }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      LI_ACCESS_TOKEN: ${{ secrets.LI_ACCESS_TOKEN }}
+      LI_PERSON_URN: ${{ secrets.LI_PERSON_URN }}
+      TW_API_KEY: ${{ secrets.TW_API_KEY }}
+      TW_API_SECRET: ${{ secrets.TW_API_SECRET }}
+      TW_ACCESS_TOKEN: ${{ secrets.TW_ACCESS_TOKEN }}
+      TW_ACCESS_SECRET: ${{ secrets.TW_ACCESS_SECRET }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Determine post index
+        id: index
+        run: |
+          # Map cron minute to post index
+          MINUTE=$(date +%M)
+          HOUR=$(date +%H)
+          case "$HOUR:$MINUTE" in
+            "06:00") INDEX=0 ;;
+            "08:24") INDEX=1 ;;
+            "10:48") INDEX=2 ;;
+            "13:12") INDEX=3 ;;
+            "15:36") INDEX=4 ;;
+            "18:00") INDEX=5 ;;
+            "20:24") INDEX=6 ;;
+            "22:48") INDEX=7 ;;
+            "01:12") INDEX=8 ;;
+            "03:36") INDEX=9 ;;
+            *) INDEX=${{ github.event.inputs.post_index || 0 }} ;;
+          esac
+          echo "POST_INDEX=$INDEX" >> $GITHUB_ENV
+          echo "Using post index: $INDEX"
+
+      - name: Run autoposter
+        run: node index.js
