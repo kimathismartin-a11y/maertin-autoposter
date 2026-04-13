@@ -15,18 +15,56 @@ print(f"\n── Run #{run_index} ───────────────�
 print(f"Keyword: {keyword}")
 print(f"Post: {message[:60]}...")
 
+# ─── Page brand image pools ───────────────────────────────────────────────────
+PAGE_CONFIG = {
+    "Maertin K": {
+        "page_id": os.environ["FB_PAGE_ID_3"],
+        "token":   os.environ["FB_ACCESS_TOKEN_3"],
+        "images":  [
+            "personal finance planning",
+            "financial advisor budget",
+            "personal savings goals",
+            "money planning notebook",
+            "finance calculator desk",
+        ],
+    },
+    "Money Mastery 2.0": {
+        "page_id": os.environ["FB_PAGE_ID_2"],
+        "token":   os.environ["FB_ACCESS_TOKEN_2"],
+        "images":  [
+            "money cash dollars",
+            "money wallet spending",
+            "dollar bills saving",
+            "money growth coins",
+            "cash financial success",
+        ],
+    },
+    "WealthSphere": {
+        "page_id": os.environ["FB_PAGE_ID_1"],
+        "token":   os.environ["FB_ACCESS_TOKEN_1"],
+        "images":  [
+            "wealth luxury lifestyle",
+            "wealth building investment",
+            "wealthy entrepreneur success",
+            "abundance prosperity gold",
+            "wealth freedom travel",
+        ],
+    },
+}
+
 # ─── Pexels image ─────────────────────────────────────────────────────────────
-def get_image(query):
+def get_image(query, offset=0):
     try:
         res = requests.get(
             "https://api.pexels.com/v1/search",
-            params={"query": query, "per_page": 5, "orientation": "landscape"},
+            params={"query": query, "per_page": 10, "orientation": "landscape"},
             headers={"Authorization": os.environ["PEXELS_API_KEY"]},
             timeout=10,
         )
         photos = res.json().get("photos", [])
         if photos:
-            return photos[run_index % len(photos)]["src"]["large"]
+            index = (run_index + offset) % len(photos)
+            return photos[index]["src"]["large"]
     except Exception as e:
         print(f"Pexels error: {e}")
     return None
@@ -102,32 +140,24 @@ def post_linkedin(message):
         print(f"LinkedIn exception: {e}")
 
 # ─── Run ──────────────────────────────────────────────────────────────────────
-# Facebook:  every run — 10 posts/day per page
-# Twitter:   every run — 50 posts/day
-# LinkedIn:  every 17th run — 3 posts/day
+print("\nPosting to Facebook pages...")
 
-print("\nFetching image...")
-image_url = get_image(keyword)
-print(f"Image: {image_url or 'none'}")
-
-print("\nPosting...")
-
-# Facebook — all 3 pages
-fb_pages = [
-    (os.environ["FB_PAGE_ID_1"], os.environ["FB_ACCESS_TOKEN_1"], "WealthSphere"),
-    (os.environ["FB_PAGE_ID_2"], os.environ["FB_ACCESS_TOKEN_2"], "Money Mastery 2.0"),
-    (os.environ["FB_PAGE_ID_3"], os.environ["FB_ACCESS_TOKEN_3"], "Maertin K"),
-]
-for page_id, token, name in fb_pages:
-    post_facebook(page_id, token, name, message, image_url)
+for i, (name, config) in enumerate(PAGE_CONFIG.items()):
+    img_query = config["images"][run_index % len(config["images"])]
+    image_url = get_image(img_query, offset=i * 3)
+    print(f"\n[{name}] Query: {img_query}")
+    print(f"[{name}] Image: {image_url or 'none'}")
+    post_facebook(config["page_id"], config["token"], name, message, image_url)
 
 # Twitter — every run
+print("\nPosting to Twitter...")
 post_twitter(message)
 
-# LinkedIn — every 17th run (~3 posts/day across 50 runs)
+# LinkedIn — every 17th run (~3 posts/day)
 if run_index % 17 == 0:
+    print("\nPosting to LinkedIn...")
     post_linkedin(message)
 else:
-    print(f"LinkedIn — skipping run #{run_index}")
+    print(f"\nLinkedIn — skipping run #{run_index}")
 
 print("\n── Done ──────────────────────────────────\n")
