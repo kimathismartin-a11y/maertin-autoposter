@@ -1,4 +1,4 @@
-name: Wealth Insights Global Autoposter
+]name: Wealth Insights Global Autoposter
 
 on:
   workflow_dispatch:
