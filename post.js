@@ -11,9 +11,6 @@ if (!message || !keyword) {
   process.exit(1);
 }
 
-console.log(`Post #${index}: "${message.slice(0, 60)}..."`);
-console.log(`Keyword: ${keyword}`);
-
 async function getPexelsImage(query) {
   const url = `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=5&orientation=landscape`;
   const res = await fetch(url, {
@@ -78,26 +75,45 @@ async function postLinkedIn(text, imageUrl) {
     }),
   });
   const data = await res.json();
+  console.log("LinkedIn response:", JSON.stringify(data, null, 2));
   if (!res.ok) throw new Error(`LinkedIn error: ${data.message}`);
   console.log("LinkedIn posted — URN:", data.id);
 }
 
 async function run() {
+  console.log("Starting autopost...");
+  console.log("Selected post:", message);
+  console.log("Keyword:", keyword);
+
   const results = { twitter: false, facebook: false, linkedin: false };
 
   let imageUrl;
   try {
     imageUrl = await getPexelsImage(keyword);
-    console.log("Image:", imageUrl);
+    console.log("Image URL:", imageUrl);
   } catch (err) {
     console.error("Image fetch failed:", err.message);
     process.exit(1);
   }
 
   await Promise.allSettled([
-    postTwitter(message, imageUrl).then(() => (results.twitter = true)).catch(e => console.error("Twitter failed:", e.message)),
-    postFacebook(message, imageUrl).then(() => (results.facebook = true)).catch(e => console.error("Facebook failed:", e.message)),
-    postLinkedIn(message, imageUrl).then(() => (results.linkedin = true)).catch(e => console.error("LinkedIn failed:", e.message)),
+    (async () => {
+      console.log("Posting to Twitter...");
+      await postTwitter(message, imageUrl);
+      results.twitter = true;
+    })().catch(e => console.error("Twitter failed:", e.message)),
+
+    (async () => {
+      console.log("Posting to Facebook...");
+      await postFacebook(message, imageUrl);
+      results.facebook = true;
+    })().catch(e => console.error("Facebook failed:", e.message)),
+
+    (async () => {
+      console.log("Posting to LinkedIn...");
+      await postLinkedIn(message, imageUrl);
+      results.linkedin = true;
+    })().catch(e => console.error("LinkedIn failed:", e.message)),
   ]);
 
   console.log("\nSummary:");
