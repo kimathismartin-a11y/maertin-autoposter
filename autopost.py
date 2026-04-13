@@ -1,169 +1,75 @@
+#!/usr/bin/env python3
+"""
+Maertin K Autoposter
+Posts to Maertin K Facebook page only.
+24 posts per day — one every hour — triggered by GitHub Actions cron.
+"""
+
 import os
 import json
 import requests
+from datetime import datetime
 
-# ─── Load posts ───────────────────────────────────────────────────────────────
-with open("posts.json", "r") as f:
-    posts = json.load(f)
 
-run_index = int(os.environ.get("POST_INDEX", 0))
-post_to_facebook = os.environ.get("POST_TO_FACEBOOK", "true").lower() == "true"
-post = posts[run_index % len(posts)]
-message = post["text"]
-keyword = post["keyword"]
+# ── Config ────────────────────────────────────────────────────────────────────
+PAGE_ACCESS_TOKEN = os.environ.get("FACEBOOK_PAGE_ACCESS_TOKEN")
+PAGE_ID           = os.environ.get("FACEBOOK_PAGE_ID")
+POSTS_FILE        = os.path.join(os.path.dirname(__file__), "posts.json")
 
-print(f"\n── Run #{run_index} ──────────────────────────")
-print(f"Keyword: {keyword}")
-print(f"Facebook this run: {post_to_facebook}")
-print(f"Post: {message[:60]}...")
 
-# ─── Page brand image pools ───────────────────────────────────────────────────
-PAGE_CONFIG = {
-    "Maertin K": {
-        "page_id": os.environ["FB_PAGE_ID_3"],
-        "token":   os.environ["FB_ACCESS_TOKEN_3"],
-        "images":  [
-            "personal finance planning",
-            "financial advisor budget",
-            "personal savings goals",
-            "money planning notebook",
-            "finance calculator desk",
-        ],
-    },
-    "Money Mastery 2.0": {
-        "page_id": os.environ["FB_PAGE_ID_2"],
-        "token":   os.environ["FB_ACCESS_TOKEN_2"],
-        "images":  [
-            "money cash dollars",
-            "money wallet spending",
-            "dollar bills saving",
-            "money growth coins",
-            "cash financial success",
-        ],
-    },
-    "WealthSphere": {
-        "page_id": os.environ["FB_PAGE_ID_1"],
-        "token":   os.environ["FB_ACCESS_TOKEN_1"],
-        "images":  [
-            "wealth luxury lifestyle",
-            "wealth building investment",
-            "wealthy entrepreneur success",
-            "abundance prosperity gold",
-            "wealth freedom travel",
-        ],
-    },
-}
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def get_current_hour() -> int:
+    return datetime.utcnow().hour
 
-# ─── Pexels image ─────────────────────────────────────────────────────────────
-def get_image(query, offset=0):
-    try:
-        res = requests.get(
-            "https://api.pexels.com/v1/search",
-            params={"query": query, "per_page": 10, "orientation": "landscape"},
-            headers={"Authorization": os.environ["PEXELS_API_KEY"]},
-            timeout=10,
-        )
-        photos = res.json().get("photos", [])
-        if photos:
-            index = (run_index + offset) % len(photos)
-            return photos[index]["src"]["large"]
-    except Exception as e:
-        print(f"Pexels error: {e}")
+
+def load_posts(filepath: str) -> list:
+    with open(filepath, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def get_post_for_hour(posts: list, hour: int) -> dict | None:
+    for post in posts:
+        if post.get("hour") == hour:
+            return post
     return None
 
-# ─── Facebook ─────────────────────────────────────────────────────────────────
-def post_facebook(page_id, token, page_name, message, image_url):
-    try:
-        if image_url:
-            endpoint = f"https://graph.facebook.com/v19.0/{page_id}/photos"
-            payload = {"url": image_url, "caption": message, "access_token": token}
-        else:
-            endpoint = f"https://graph.facebook.com/v19.0/{page_id}/feed"
-            payload = {"message": message, "access_token": token}
-        res = requests.post(endpoint, data=payload, timeout=15)
-        data = res.json()
-        if "error" in data:
-            print(f"Facebook [{page_name}] error: {data['error']['message']}")
-        else:
-            print(f"✓ Facebook [{page_name}] posted: {data.get('id')}")
-    except Exception as e:
-        print(f"Facebook [{page_name}] exception: {e}")
 
-# ─── Twitter/X ────────────────────────────────────────────────────────────────
-def post_twitter(message):
-    try:
-        import tweepy
-        client = tweepy.Client(
-            consumer_key=os.environ["TW_API_KEY"],
-            consumer_secret=os.environ["TW_API_SECRET"],
-            access_token=os.environ["TW_ACCESS_TOKEN"],
-            access_token_secret=os.environ["TW_ACCESS_SECRET"],
-        )
-        tweet = message[:277] + "..." if len(message) > 280 else message
-        result = client.create_tweet(text=tweet)
-        print(f"✓ Twitter posted: {result.data['id']}")
-    except Exception as e:
-        print(f"Twitter exception: {e}")
+def publish_to_facebook(page_id: str, token: str, message: str) -> dict:
+    url     = f"https://graph.facebook.com/v19.0/{page_id}/feed"
+    payload = {"message": message, "access_token": token}
+    resp    = requests.post(url, data=payload, timeout=30)
+    return resp.json()
 
-# ─── LinkedIn ─────────────────────────────────────────────────────────────────
-def post_linkedin(message):
-    try:
-        urn = os.environ["LI_PERSON_URN"]
-        token = os.environ["LI_ACCESS_TOKEN"]
-        body = {
-            "author": urn,
-            "lifecycleState": "PUBLISHED",
-            "specificContent": {
-                "com.linkedin.ugc.ShareContent": {
-                    "shareCommentary": {"text": message},
-                    "shareMediaCategory": "NONE",
-                }
-            },
-            "visibility": {
-                "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC"
-            },
-        }
-        res = requests.post(
-            "https://api.linkedin.com/v2/ugcPosts",
-            json=body,
-            headers={
-                "Authorization": f"Bearer {token}",
-                "Content-Type": "application/json",
-                "X-Restli-Protocol-Version": "2.0.0",
-            },
-            timeout=15,
-        )
-        data = res.json()
-        if "id" in data:
-            print(f"✓ LinkedIn posted: {data['id']}")
-        else:
-            print(f"LinkedIn error: {data}")
-    except Exception as e:
-        print(f"LinkedIn exception: {e}")
 
-# ─── Run ──────────────────────────────────────────────────────────────────────
+# ── Main ──────────────────────────────────────────────────────────────────────
+def main():
+    if not PAGE_ACCESS_TOKEN:
+        raise EnvironmentError("Missing secret: FACEBOOK_PAGE_ACCESS_TOKEN")
+    if not PAGE_ID:
+        raise EnvironmentError("Missing secret: FACEBOOK_PAGE_ID")
 
-# Facebook — only on hourly runs (24 posts/day)
-if post_to_facebook:
-    print("\nPosting to Facebook pages...")
-    for i, (name, config) in enumerate(PAGE_CONFIG.items()):
-        img_query = config["images"][run_index % len(config["images"])]
-        image_url = get_image(img_query, offset=i * 3)
-        print(f"\n[{name}] Query: {img_query}")
-        print(f"[{name}] Image: {image_url or 'none'}")
-        post_facebook(config["page_id"], config["token"], name, message, image_url)
-else:
-    print("\nFacebook — skipping this run (Twitter only)")
+    posts = load_posts(POSTS_FILE)
+    hour  = get_current_hour()
 
-# Twitter — every run (50 posts/day)
-print("\nPosting to Twitter...")
-post_twitter(message)
+    print(f"[{datetime.utcnow().isoformat()}] Autoposter running — UTC hour: {hour}")
 
-# LinkedIn — every 17th run (~3 posts/day)
-if run_index % 17 == 0:
-    print("\nPosting to LinkedIn...")
-    post_linkedin(message)
-else:
-    print(f"\nLinkedIn — skipping run #{run_index}")
+    post = get_post_for_hour(posts, hour)
 
-print("\n── Done ──────────────────────────────────\n")
+    if not post:
+        print(f"No post scheduled for hour {hour}. Nothing to publish.")
+        return
+
+    print(f"Publishing post ID {post['id']} (hour {hour})...")
+    print(f"Preview: {post['content'][:100]}...")
+
+    result = publish_to_facebook(PAGE_ID, PAGE_ACCESS_TOKEN, post["content"])
+
+    if "id" in result:
+        print(f"SUCCESS — Facebook post published. ID: {result['id']}")
+    else:
+        print(f"FAILED — API response: {result}")
+        raise RuntimeError(f"Facebook API error: {result}")
+
+
+if __name__ == "__main__":
+    main()
