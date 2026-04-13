@@ -8,56 +8,58 @@ on:
         required: false
         default: "0"
   schedule:
-    - cron: "0 6 * * *"
-    - cron: "29 6 * * *"
-    - cron: "58 6 * * *"
-    - cron: "27 7 * * *"
-    - cron: "56 7 * * *"
-    - cron: "25 8 * * *"
-    - cron: "54 8 * * *"
-    - cron: "23 9 * * *"
-    - cron: "52 9 * * *"
-    - cron: "21 10 * * *"
-    - cron: "50 10 * * *"
-    - cron: "19 11 * * *"
-    - cron: "48 11 * * *"
-    - cron: "17 12 * * *"
-    - cron: "46 12 * * *"
-    - cron: "15 13 * * *"
-    - cron: "44 13 * * *"
-    - cron: "13 14 * * *"
-    - cron: "42 14 * * *"
-    - cron: "11 15 * * *"
-    - cron: "40 15 * * *"
-    - cron: "9 16 * * *"
-    - cron: "38 16 * * *"
-    - cron: "7 17 * * *"
-    - cron: "36 17 * * *"
-    - cron: "5 18 * * *"
-    - cron: "34 18 * * *"
-    - cron: "3 19 * * *"
-    - cron: "32 19 * * *"
-    - cron: "1 20 * * *"
-    - cron: "30 20 * * *"
-    - cron: "59 20 * * *"
-    - cron: "28 21 * * *"
-    - cron: "57 21 * * *"
-    - cron: "26 22 * * *"
-    - cron: "55 22 * * *"
-    - cron: "24 23 * * *"
-    - cron: "53 23 * * *"
-    - cron: "22 0 * * *"
-    - cron: "51 0 * * *"
-    - cron: "20 1 * * *"
-    - cron: "49 1 * * *"
-    - cron: "18 2 * * *"
-    - cron: "47 2 * * *"
-    - cron: "16 3 * * *"
-    - cron: "45 3 * * *"
-    - cron: "14 4 * * *"
-    - cron: "43 4 * * *"
-    - cron: "12 5 * * *"
-    - cron: "41 5 * * *"
+    # Twitter: every 29 minutes — 50 posts/day
+    # Facebook: every hour on the hour — 24 posts/day
+    - cron: "0 0 * * *"    # FB + TW — index 0
+    - cron: "29 0 * * *"   # TW only — index 1
+    - cron: "0 1 * * *"    # FB + TW — index 2
+    - cron: "29 1 * * *"   # TW only — index 3
+    - cron: "0 2 * * *"    # FB + TW — index 4
+    - cron: "29 2 * * *"   # TW only — index 5
+    - cron: "0 3 * * *"    # FB + TW — index 6
+    - cron: "29 3 * * *"   # TW only — index 7
+    - cron: "0 4 * * *"    # FB + TW — index 8
+    - cron: "29 4 * * *"   # TW only — index 9
+    - cron: "0 5 * * *"    # FB + TW — index 10
+    - cron: "29 5 * * *"   # TW only — index 11
+    - cron: "0 6 * * *"    # FB + TW — index 12
+    - cron: "29 6 * * *"   # TW only — index 13
+    - cron: "0 7 * * *"    # FB + TW — index 14
+    - cron: "29 7 * * *"   # TW only — index 15
+    - cron: "0 8 * * *"    # FB + TW — index 16
+    - cron: "29 8 * * *"   # TW only — index 17
+    - cron: "0 9 * * *"    # FB + TW — index 18
+    - cron: "29 9 * * *"   # TW only — index 19
+    - cron: "0 10 * * *"   # FB + TW — index 20
+    - cron: "29 10 * * *"  # TW only — index 21
+    - cron: "0 11 * * *"   # FB + TW — index 22
+    - cron: "29 11 * * *"  # TW only — index 23
+    - cron: "0 12 * * *"   # FB + TW — index 24
+    - cron: "29 12 * * *"  # TW only — index 25
+    - cron: "0 13 * * *"   # FB + TW — index 26
+    - cron: "29 13 * * *"  # TW only — index 27
+    - cron: "0 14 * * *"   # FB + TW — index 28
+    - cron: "29 14 * * *"  # TW only — index 29
+    - cron: "0 15 * * *"   # FB + TW — index 30
+    - cron: "29 15 * * *"  # TW only — index 31
+    - cron: "0 16 * * *"   # FB + TW — index 32
+    - cron: "29 16 * * *"  # TW only — index 33
+    - cron: "0 17 * * *"   # FB + TW — index 34
+    - cron: "29 17 * * *"  # TW only — index 35
+    - cron: "0 18 * * *"   # FB + TW — index 36
+    - cron: "29 18 * * *"  # TW only — index 37
+    - cron: "0 19 * * *"   # FB + TW — index 38
+    - cron: "29 19 * * *"  # TW only — index 39
+    - cron: "0 20 * * *"   # FB + TW — index 40
+    - cron: "29 20 * * *"  # TW only — index 41
+    - cron: "0 21 * * *"   # FB + TW — index 42
+    - cron: "29 21 * * *"  # TW only — index 43
+    - cron: "0 22 * * *"   # FB + TW — index 44
+    - cron: "29 22 * * *"  # TW only — index 45
+    - cron: "0 23 * * *"   # FB + TW — index 46
+    - cron: "29 23 * * *"  # TW only — index 47
+    - cron: "14 11 * * *"  # TW only — index 48
+    - cron: "44 23 * * *"  # TW only — index 49
 
 jobs:
   autopost:
@@ -76,6 +78,7 @@ jobs:
       TW_ACCESS_TOKEN: ${{ secrets.TW_ACCESS_TOKEN }}
       TW_ACCESS_SECRET: ${{ secrets.TW_ACCESS_SECRET }}
       PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+      POST_MINUTE: ${{ github.event.inputs.post_index || 0 }}
 
     steps:
       - name: Checkout repo
@@ -89,10 +92,20 @@ jobs:
       - name: Install dependencies
         run: pip install requests tweepy
 
-      - name: Set post index
+      - name: Set post index and Facebook flag
         run: |
-          INDEX=${{ github.event.inputs.post_index || 0 }}
+          MINUTE=$(date +%M)
+          HOUR=$(date +%H)
+          # Calculate run index (0-49)
+          INDEX=$(( (HOUR * 2) + (MINUTE >= 29 ? 1 : 0) ))
           echo "POST_INDEX=$INDEX" >> $GITHUB_ENV
+          # Facebook posts only on the hour (minute = 00)
+          if [ "$MINUTE" -lt "10" ]; then
+            echo "POST_TO_FACEBOOK=true" >> $GITHUB_ENV
+          else
+            echo "POST_TO_FACEBOOK=false" >> $GITHUB_ENV
+          fi
+          echo "Run index: $INDEX | Facebook: $([ $MINUTE -lt 10 ] && echo yes || echo no)"
 
       - name: Run autoposter
         run: python autopost.py
