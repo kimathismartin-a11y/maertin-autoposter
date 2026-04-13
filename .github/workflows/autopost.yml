@@ -1,0 +1,54 @@
+name: Wealth Insights Global Autoposter
+
+on:
+  workflow_dispatch:
+    inputs:
+      post_index:
+        description: "Post index (0-29)"
+        required: false
+        default: "0"
+  schedule:
+    - cron: "0 6 * * *"
+    - cron: "24 8 * * *"
+    - cron: "48 10 * * *"
+    - cron: "12 13 * * *"
+    - cron: "36 15 * * *"
+    - cron: "0 18 * * *"
+    - cron: "24 20 * * *"
+    - cron: "48 22 * * *"
+    - cron: "12 1 * * *"
+    - cron: "36 3 * * *"
+
+jobs:
+  autopost:
+    runs-on: ubuntu-latest
+    env:
+      FB_ACCESS_TOKEN: ${{ secrets.FB_ACCESS_TOKEN }}
+      FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+      LI_ACCESS_TOKEN: ${{ secrets.LI_ACCESS_TOKEN }}
+      LI_PERSON_URN: ${{ secrets.LI_PERSON_URN }}
+      TW_API_KEY: ${{ secrets.TW_API_KEY }}
+      TW_API_SECRET: ${{ secrets.TW_API_SECRET }}
+      TW_ACCESS_TOKEN: ${{ secrets.TW_ACCESS_TOKEN }}
+      TW_ACCESS_SECRET: ${{ secrets.TW_ACCESS_SECRET }}
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests tweepy
+
+      - name: Set post index
+        run: |
+          INDEX=${{ github.event.inputs.post_index || 0 }}
+          echo "POST_INDEX=$INDEX" >> $GITHUB_ENV
+
+      - name: Run autoposter
+        run: python autopost.py
