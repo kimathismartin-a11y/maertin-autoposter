@@ -1,10 +1,9 @@
-const { TwitterApi } = require("twitter-api-v2");
-
-const posts = require("./posts.json");
-
-// FIX: dynamic import for node-fetch (ESM)
+// FIXED fetch (ESM compatible)
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
+
+const { TwitterApi } = require("twitter-api-v2");
+const posts = require("./posts.json");
 
 // rotate posts
 const index = new Date().getHours() % posts.length;
