@@ -7,12 +7,14 @@ with open("posts.json", "r") as f:
     posts = json.load(f)
 
 run_index = int(os.environ.get("POST_INDEX", 0))
+post_to_facebook = os.environ.get("POST_TO_FACEBOOK", "true").lower() == "true"
 post = posts[run_index % len(posts)]
 message = post["text"]
 keyword = post["keyword"]
 
 print(f"\n── Run #{run_index} ──────────────────────────")
 print(f"Keyword: {keyword}")
+print(f"Facebook this run: {post_to_facebook}")
 print(f"Post: {message[:60]}...")
 
 # ─── Page brand image pools ───────────────────────────────────────────────────
@@ -140,16 +142,20 @@ def post_linkedin(message):
         print(f"LinkedIn exception: {e}")
 
 # ─── Run ──────────────────────────────────────────────────────────────────────
-print("\nPosting to Facebook pages...")
 
-for i, (name, config) in enumerate(PAGE_CONFIG.items()):
-    img_query = config["images"][run_index % len(config["images"])]
-    image_url = get_image(img_query, offset=i * 3)
-    print(f"\n[{name}] Query: {img_query}")
-    print(f"[{name}] Image: {image_url or 'none'}")
-    post_facebook(config["page_id"], config["token"], name, message, image_url)
+# Facebook — only on hourly runs (24 posts/day)
+if post_to_facebook:
+    print("\nPosting to Facebook pages...")
+    for i, (name, config) in enumerate(PAGE_CONFIG.items()):
+        img_query = config["images"][run_index % len(config["images"])]
+        image_url = get_image(img_query, offset=i * 3)
+        print(f"\n[{name}] Query: {img_query}")
+        print(f"[{name}] Image: {image_url or 'none'}")
+        post_facebook(config["page_id"], config["token"], name, message, image_url)
+else:
+    print("\nFacebook — skipping this run (Twitter only)")
 
-# Twitter — every run
+# Twitter — every run (50 posts/day)
 print("\nPosting to Twitter...")
 post_twitter(message)
 
