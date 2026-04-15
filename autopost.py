@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Maertin K Autoposter
-Posts to Maertin K Facebook page — 24 posts per day, one every hour.
+Posts to Maertin K Facebook page — 4 posts per day, every 6 hours.
 Triggered by GitHub Actions cron schedule.
 """
 import os
@@ -13,6 +13,14 @@ from datetime import datetime
 PAGE_ACCESS_TOKEN = os.environ.get("FACEBOOK_PAGE_ACCESS_TOKEN")
 PAGE_ID           = "111221800684391"  # Maertin K Facebook Page
 POSTS_FILE        = os.path.join(os.path.dirname(__file__), "posts.json")
+
+# ── Post schedule (UTC hours → post index) ────────────────────────────────────
+SCHEDULE = {
+    6:  0,   # 6 AM UTC  → post index 0
+    12: 1,   # 12 PM UTC → post index 1
+    18: 2,   # 6 PM UTC  → post index 2
+    0:  3,   # 12 AM UTC → post index 3
+}
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def load_posts(filepath: str) -> list:
@@ -35,14 +43,19 @@ def main():
 
     print(f"[{datetime.utcnow().isoformat()}] Maertin K Autoposter — UTC hour: {hour}")
 
-    # Use hour as direct index (0–23) — no lookup table, no gaps
-    if hour >= len(posts):
-        print(f"No post at index {hour}. Only {len(posts)} posts in file. Skipping.")
+    if hour not in SCHEDULE:
+        print(f"No post scheduled at UTC hour {hour}. Skipping.")
         return
 
-    post = posts[hour]
+    index = SCHEDULE[hour]
 
-    print(f"Publishing post index {hour}...")
+    if index >= len(posts):
+        print(f"Post index {index} not found. Only {len(posts)} posts in file. Skipping.")
+        return
+
+    post = posts[index]
+
+    print(f"Publishing post index {index} (scheduled hour: {hour})...")
     print(f"Preview: {str(post['content'])[:100]}...")
 
     result = publish_to_facebook(PAGE_ID, PAGE_ACCESS_TOKEN, post["content"])
